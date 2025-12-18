@@ -1,0 +1,10 @@
+package repository;
+
+import entity.Todo;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
+@Repository
+public interface TodoRepository extends JpaRepository<Todo, Long> {
+    // 인터페이스만 선언해도 기본적인 Save, Find, Delete 메서드가 자동 생성
+}
