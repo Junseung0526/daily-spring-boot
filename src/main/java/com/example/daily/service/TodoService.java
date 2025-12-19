@@ -1,7 +1,7 @@
-package com.example.service;
+package com.example.daily.service;
 
-import com.example.entity.Todo;
-import com.example.repository.TodoRepository;
+import com.example.daily.entity.Todo;
+import com.example.daily.repository.TodoRepository;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;

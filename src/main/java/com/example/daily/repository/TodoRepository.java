@@ -1,6 +1,6 @@
-package com.example.repository;
+package com.example.daily.repository;
 
-import com.example.entity.Todo;
+import com.example.daily.entity.Todo;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
