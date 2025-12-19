@@ -1,5 +1,6 @@
 package com.example.daily.controller;
 
+import com.example.daily.dto.TodoRequestDto;
 import com.example.daily.entity.Todo;
 import com.example.daily.service.TodoService;
 import lombok.RequiredArgsConstructor;
@@ -24,8 +25,8 @@ public class TodoController {
 
     //할 일 등록
     @PostMapping
-    public Todo create(@RequestBody Todo todo) {
-        return ts.createTodo(todo);
+    public Todo create(@RequestBody TodoRequestDto dto) {
+        return ts.createTodo(dto);
     }
 
     //할 일 조회
@@ -42,8 +43,8 @@ public class TodoController {
 
     //할 일 업데이트
     @PutMapping("/{id}")
-    public Todo update(@PathVariable Long id, @RequestBody Todo todo) {
-        return ts.updateTodo(id, todo);
+    public Todo update(@PathVariable Long id, @RequestBody TodoRequestDto dto) {
+        return ts.updateTodo(id, dto);
     }
 
     //할 일 삭제
