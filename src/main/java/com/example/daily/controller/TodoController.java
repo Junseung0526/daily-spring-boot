@@ -1,18 +1,10 @@
 package com.example.daily.controller;
 
 import com.example.daily.dto.TodoRequestDto;
-import com.example.daily.entity.Todo;
+import com.example.daily.dto.TodoResponseDto;
 import com.example.daily.service.TodoService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PatchMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -25,25 +17,25 @@ public class TodoController {
 
     //할 일 등록
     @PostMapping
-    public Todo create(@RequestBody TodoRequestDto dto) {
+    public TodoResponseDto create(@RequestBody TodoRequestDto dto) {
         return ts.createTodo(dto);
     }
 
-    //할 일 조회
+    //전체 할 일 조회
     @GetMapping
-    public List<Todo> getAll() {
+    public List<TodoResponseDto> getAll() {
         return ts.getAllTodos();
     }
 
-    //할 일 id별 조회
+    //할 일 ID별 조회
     @GetMapping("/{id}")
-    public Todo getById(@PathVariable Long id) {
+    public TodoResponseDto getById(@PathVariable Long id) {
         return ts.getTodoById(id);
     }
 
     //할 일 업데이트
     @PutMapping("/{id}")
-    public Todo update(@PathVariable Long id, @RequestBody TodoRequestDto dto) {
+    public TodoResponseDto update(@PathVariable Long id, @RequestBody TodoRequestDto dto) {
         return ts.updateTodo(id, dto);
     }
 
