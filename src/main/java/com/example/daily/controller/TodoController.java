@@ -3,6 +3,7 @@ package com.example.daily.controller;
 import com.example.daily.dto.TodoRequestDto;
 import com.example.daily.dto.TodoResponseDto;
 import com.example.daily.service.TodoService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -17,7 +18,7 @@ public class TodoController {
 
     //할 일 등록
     @PostMapping
-    public TodoResponseDto create(@RequestBody TodoRequestDto dto) {
+    public TodoResponseDto create(@Valid @RequestBody TodoRequestDto dto) {
         return ts.createTodo(dto);
     }
 
@@ -35,7 +36,7 @@ public class TodoController {
 
     //할 일 업데이트
     @PutMapping("/{id}")
-    public TodoResponseDto update(@PathVariable Long id, @RequestBody TodoRequestDto dto) {
+    public TodoResponseDto update(@PathVariable Long id, @Valid @RequestBody TodoRequestDto dto) {
         return ts.updateTodo(id, dto);
     }
 
