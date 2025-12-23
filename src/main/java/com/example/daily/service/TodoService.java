@@ -81,4 +81,11 @@ public class TodoService {
                 .map(TodoResponseDto::new)
                 .collect(Collectors.toList());
     }
+
+    //키워드 & 완료여부 함께 검색
+    public List<TodoResponseDto> getTodoByKeywordAndStatus(String keyword, boolean completed) {
+        return tr.findByTitleContainingAndCompleted(keyword, completed).stream()
+                .map(TodoResponseDto::new)
+                .collect(Collectors.toList());
+    }
 }
