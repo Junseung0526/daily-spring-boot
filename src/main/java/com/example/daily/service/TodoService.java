@@ -62,9 +62,16 @@ public class TodoService {
         tr.delete(todo);
     }
 
-    // 6. [내부 로직] 엔티티 조회 (중복 제거용)
+    // [내부 로직] 엔티티 조회 (중복 제거용)
     private Todo getTodoEntity(Long id) {
         return tr.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("해당 할 일이 존재하지 않습니다. id: " + id));
+    }
+
+    //키워드로 검색 기능
+    public List<TodoResponseDto> searchTodos(String keyword) {
+        return tr.findByTitleContaining(keyword).stream()
+                .map(TodoResponseDto::new)
+                .collect(Collectors.toList());
     }
 }

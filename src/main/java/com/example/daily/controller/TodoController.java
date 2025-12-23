@@ -45,4 +45,10 @@ public class TodoController {
     public void delete(@PathVariable Long id) {
         ts.deleteTodo(id);
     }
+
+    //키워드 검색
+    @GetMapping("/search")
+    public List<TodoResponseDto> search(@RequestParam(name = "keyword") String keyword) {
+        return ts.searchTodos(keyword);
+    }
 }
