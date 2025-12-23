@@ -74,4 +74,11 @@ public class TodoService {
                 .map(TodoResponseDto::new)
                 .collect(Collectors.toList());
     }
+
+    //완료 여부 필터링 기능
+    public List<TodoResponseDto> getTodoByStatus(boolean completed) {
+        return tr.findByCompleted(completed).stream()
+                .map(TodoResponseDto::new)
+                .collect(Collectors.toList());
+    }
 }

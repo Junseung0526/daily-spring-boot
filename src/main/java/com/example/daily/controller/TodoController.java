@@ -51,4 +51,10 @@ public class TodoController {
     public List<TodoResponseDto> search(@RequestParam(name = "keyword") String keyword) {
         return ts.searchTodos(keyword);
     }
+
+    //완료 여부 필터링
+    @GetMapping("/filter")
+    public List<TodoResponseDto> filter(@RequestParam(name = "completed") boolean completed) {
+        return ts.getTodoByStatus(completed);
+    }
 }
