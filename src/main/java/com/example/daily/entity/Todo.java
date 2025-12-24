@@ -20,4 +20,13 @@ public class Todo {
 
     @Column(nullable = false)
     private boolean completed;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id")
+    private User user;
+
+    public void setUser(User user) {
+        this.user = user;
+        user.getTodoList().add(this);
+    }
 }

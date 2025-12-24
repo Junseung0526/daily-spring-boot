@@ -21,16 +21,19 @@ public class TodoController {
     private final TodoService ts;
 
     //할 일 등록
-    @PostMapping
-    public TodoResponseDto create(@Valid @RequestBody TodoRequestDto dto) {
-        return ts.createTodo(dto);
+    @PostMapping("/user/{userId}")
+    public TodoResponseDto create(
+            @Valid @RequestBody TodoRequestDto dto,
+            @PathVariable Long userId) {
+
+        return ts.createTodo(dto, userId);
     }
 
     //전체 할 일 조회 / 페이지별 5개 제한
     @GetMapping("/paging")
     public Page<TodoResponseDto> getAllPaging(
-        @PageableDefault(size = 5, sort = "id", direction = Sort.Direction.DESC) Pageable pageable) {
-    return ts.getAllTodosPaging(pageable);
+            @PageableDefault(size = 5, sort = "id", direction = Sort.Direction.DESC) Pageable pageable) {
+        return ts.getAllTodosPaging(pageable);
     }
 
     //할 일 ID별 조회

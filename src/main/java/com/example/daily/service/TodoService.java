@@ -3,6 +3,7 @@ package com.example.daily.service;
 import com.example.daily.dto.TodoRequestDto;
 import com.example.daily.dto.TodoResponseDto;
 import com.example.daily.entity.Todo;
+import com.example.daily.entity.User;
 import com.example.daily.repository.TodoRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -19,17 +20,20 @@ import java.util.stream.Collectors;
 public class TodoService {
 
     private final TodoRepository tr;
+    private final UserService us;
 
     //할 일 저장
     @Transactional
-    public TodoResponseDto createTodo(TodoRequestDto dto) {
+    public TodoResponseDto createTodo(TodoRequestDto dto, Long userId) {
+        User user = us.getUserById(userId);
+
         Todo todo = Todo.builder()
                 .title(dto.getTitle())
                 .completed(dto.isCompleted())
                 .build();
+        todo.setUser(user);
 
-        Todo savedTodo = tr.save(todo);
-        return new TodoResponseDto(savedTodo);
+        return new TodoResponseDto(tr.save(todo));
     }
 
     //전체 할 일 조회 / 페이지별 5개 제한
