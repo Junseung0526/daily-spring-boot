@@ -5,6 +5,8 @@ import com.example.daily.dto.TodoResponseDto;
 import com.example.daily.entity.Todo;
 import com.example.daily.repository.TodoRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -30,11 +32,9 @@ public class TodoService {
         return new TodoResponseDto(savedTodo);
     }
 
-    //전체 목록 조회
-    public List<TodoResponseDto> getAllTodos() {
-        return tr.findAll().stream()
-                .map(TodoResponseDto::new)
-                .collect(Collectors.toList());
+    //전체 할 일 조회 / 페이지별 5개 제한
+    public Page<TodoResponseDto> getAllTodosPaging(Pageable pageable) {
+        return tr.findAll(pageable).map(TodoResponseDto::new);
     }
 
     //단건 조회

@@ -5,6 +5,10 @@ import com.example.daily.dto.TodoResponseDto;
 import com.example.daily.service.TodoService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -22,10 +26,11 @@ public class TodoController {
         return ts.createTodo(dto);
     }
 
-    //전체 할 일 조회
-    @GetMapping
-    public List<TodoResponseDto> getAll() {
-        return ts.getAllTodos();
+    //전체 할 일 조회 / 페이지별 5개 제한
+    @GetMapping("/paging")
+    public Page<TodoResponseDto> getAllPaging(
+        @PageableDefault(size = 5, sort = "id", direction = Sort.Direction.DESC) Pageable pageable) {
+    return ts.getAllTodosPaging(pageable);
     }
 
     //할 일 ID별 조회

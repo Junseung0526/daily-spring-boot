@@ -26,8 +26,6 @@ public class DataInitializer implements CommandLineRunner {
             tr.save(Todo.builder().title("블로그에 오늘 공부한 내용 정리").completed(false).build());
             tr.save(Todo.builder().title("친구랑 약속 잡기").completed(true).build());
             tr.save(Todo.builder().title("내일 사냥 목표 설정").completed(false).build());
-
-            System.out.println("✅ 더미 데이터 10개 준비 완료!");
         }
     }
 }
