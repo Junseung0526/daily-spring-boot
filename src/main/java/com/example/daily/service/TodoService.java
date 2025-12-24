@@ -48,6 +48,17 @@ public class TodoService {
         return new TodoResponseDto(todo);
     }
 
+    //User 별 목록 조회
+    @Transactional(readOnly = true)
+    public List<TodoResponseDto> getAllTodosByUser(Long userId) {
+        User user = us.getUserById(userId);
+        List<Todo> todoList = tr.findAllByUser(user);
+        return todoList.stream()
+                .map(TodoResponseDto::new)
+                .collect(Collectors
+                        .toList());
+    }
+
     //할 일 수정
     @Transactional
     public TodoResponseDto updateTodo(Long id, TodoRequestDto dto) {

@@ -1,6 +1,7 @@
 package com.example.daily.repository;
 
 import com.example.daily.entity.Todo;
+import com.example.daily.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -13,4 +14,6 @@ public interface TodoRepository extends JpaRepository<Todo, Long> {
     List<Todo> findByTitleContaining(String keyword);
     List<Todo> findByCompleted(Boolean completed);
     List<Todo> findByTitleContainingAndCompleted(String keyword, boolean completed);
+    List<Todo> findAllByUser(User user);
+
 }

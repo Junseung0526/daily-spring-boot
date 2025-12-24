@@ -42,6 +42,12 @@ public class TodoController {
         return ts.getTodoById(id);
     }
 
+    //User 별 목록 조회
+    @GetMapping("/user/{userId}")
+    public List<TodoResponseDto> getAllByUser(@PathVariable Long userId) {
+        return ts.getAllTodosByUser(userId);
+    }
+
     //할 일 업데이트
     @PutMapping("/{id}")
     public TodoResponseDto update(@PathVariable Long id, @Valid @RequestBody TodoRequestDto dto) {
