@@ -4,6 +4,7 @@ import com.example.daily.dto.UserRequestDto;
 import com.example.daily.dto.UserResponseDto;
 import com.example.daily.entity.User;
 import com.example.daily.repository.UserRepository;
+import com.example.daily.util.JwtUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -18,6 +19,7 @@ public class UserService {
 
     private final UserRepository ur;
     private final PasswordEncoder passwordEncoder;
+    private final JwtUtil jwtUtil;
 
     //유저 생성
     @Transactional
@@ -35,20 +37,17 @@ public class UserService {
         return new UserResponseDto(ur.save(user));
     }
 
-    // UserService.java에 추가
     @Transactional(readOnly = true)
     public String login(String username, String password) {
-        // 1. 유저 확인
         User user = ur.findByUsername(username).orElseThrow(
                 () -> new IllegalArgumentException("등록된 사용자가 아닙니다.")
         );
 
-        // 2. 비밀번호 확인
         if (!passwordEncoder.matches(password, user.getPassword())) {
             throw new IllegalArgumentException("비밀번호가 일치하지 않습니다.");
         }
 
-        return "로그인 성공! (곧 토큰을 드릴게요)";
+        return jwtUtil.createToken(user.getUsername());
     }
 
     //유저 단건 조회 (내부 로직용 - Entity 반환)
