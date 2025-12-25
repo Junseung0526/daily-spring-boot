@@ -15,11 +15,16 @@ public class UserController {
 
     private final UserService us;
 
-    //유저 생성
-    @PostMapping
-    public UserResponseDto createUser(@RequestBody UserRequestDto dto) {
-        // 서비스도 이제 UserResponseDto를 반환하므로 타입이 딱 맞습니다.
-        return us.createUser(dto.getUsername(), dto.getEmail());
+    //회원가입
+    @PostMapping("/signup")
+    public UserResponseDto signup(@RequestBody UserRequestDto dto) {
+        return us.createUser(dto);
+    }
+
+    //로그인
+    @PostMapping("/login")
+    public String login(@RequestBody UserRequestDto dto) {
+        return us.login(dto.getUsername(), dto.getPassword());
     }
 
     //유저 전체 조회

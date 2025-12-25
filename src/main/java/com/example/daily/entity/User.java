@@ -37,9 +37,9 @@ public class User {
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Todo> todoList = new ArrayList<>();
 
-    public User(String username, String email, String password) {
+    public User(String username, String password, String email) {
         this.username = username;
-        this.email = email;
         this.password = password;
+        this.email = email;
     }
 }

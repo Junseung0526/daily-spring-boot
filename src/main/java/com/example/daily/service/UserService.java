@@ -1,9 +1,11 @@
 package com.example.daily.service;
 
+import com.example.daily.dto.UserRequestDto;
 import com.example.daily.dto.UserResponseDto;
 import com.example.daily.entity.User;
 import com.example.daily.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -15,13 +17,38 @@ import java.util.stream.Collectors;
 public class UserService {
 
     private final UserRepository ur;
+    private final PasswordEncoder passwordEncoder;
 
     //유저 생성
     @Transactional
-    public UserResponseDto createUser(String username, String email) {
-        User user = new User(username, email);
-        User savedUser = ur.save(user);
-        return new UserResponseDto(savedUser);
+    public UserResponseDto createUser(UserRequestDto dto) {
+        // 1. 중복 유저 확인 (선택 사냥)
+        if (ur.existsByUsername(dto.getUsername())) {
+            throw new IllegalArgumentException("중복된 사용자가 존재합니다.");
+        }
+
+        // 2. 비밀번호 암호화
+        String encodedPassword = passwordEncoder.encode(dto.getPassword());
+
+        // 3. 유저 저장
+        User user = new User(dto.getUsername(), encodedPassword, dto.getEmail());
+        return new UserResponseDto(ur.save(user));
+    }
+
+    // UserService.java에 추가
+    @Transactional(readOnly = true)
+    public String login(String username, String password) {
+        // 1. 유저 확인
+        User user = ur.findByUsername(username).orElseThrow(
+                () -> new IllegalArgumentException("등록된 사용자가 아닙니다.")
+        );
+
+        // 2. 비밀번호 확인
+        if (!passwordEncoder.matches(password, user.getPassword())) {
+            throw new IllegalArgumentException("비밀번호가 일치하지 않습니다.");
+        }
+
+        return "로그인 성공! (곧 토큰을 드릴게요)";
     }
 
     //유저 단건 조회 (내부 로직용 - Entity 반환)
