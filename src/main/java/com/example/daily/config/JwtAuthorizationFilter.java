@@ -28,13 +28,14 @@ public class JwtAuthorizationFilter extends OncePerRequestFilter {
         //헤더에서 토큰 꺼내기
         String tokenValue = request.getHeader(JwtUtil.AUTHORIZATION_HEADER);
 
-        if (StringUtils.hasText(tokenValue)) {
-            //Bearer 접두사 제거
+        //Bearer 접두사 제거
+        if (StringUtils.hasText(tokenValue) && tokenValue.startsWith(JwtUtil.BEARER_PREFIX)) {
             String token = tokenValue.substring(7);
 
             //토큰 검증
             if (!jwtUtil.validateToken(token)) {
                 log.error("Token Error");
+                response.setStatus(401);
                 return;
             }
 
