@@ -5,6 +5,7 @@ import com.example.daily.dto.TodoResponseDto;
 import com.example.daily.entity.Todo;
 import com.example.daily.entity.User;
 import com.example.daily.repository.TodoRepository;
+import com.example.daily.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -20,12 +21,12 @@ import java.util.stream.Collectors;
 public class TodoService {
 
     private final TodoRepository tr;
-    private final UserService us;
+    private final UserRepository ur;
 
-    //할 일 저장
     @Transactional
-    public TodoResponseDto createTodo(TodoRequestDto dto, Long userId) {
-        User user = us.getUserById(userId);
+    public TodoResponseDto createTodo(TodoRequestDto dto, String username) {
+        User user = ur.findByUsername(username)
+                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
 
         Todo todo = Todo.builder()
                 .title(dto.getTitle())
@@ -36,33 +37,22 @@ public class TodoService {
         return new TodoResponseDto(tr.save(todo));
     }
 
-    //전체 할 일 조회 / 페이지별 5개 제한
-    public Page<TodoResponseDto> getAllTodosPaging(Pageable pageable) {
-        return tr.findAll(pageable).map(TodoResponseDto::new);
-    }
+    public List<TodoResponseDto> getAllTodosByUser(String username) {
+        User user = ur.findByUsername(username)
+                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
 
-    //단건 조회
-    public TodoResponseDto getTodoById(Long id) {
-        Todo todo = tr.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("해당 할 일이 존재하지 않습니다. id: " + id));
-        return new TodoResponseDto(todo);
-    }
-
-    //User 별 목록 조회
-    @Transactional(readOnly = true)
-    public List<TodoResponseDto> getAllTodosByUser(Long userId) {
-        User user = us.getUserById(userId);
-        List<Todo> todoList = tr.findAllByUser(user);
-        return todoList.stream()
+        return tr.findAllByUser(user).stream()
                 .map(TodoResponseDto::new)
-                .collect(Collectors
-                        .toList());
+                .collect(Collectors.toList());
     }
 
-    //할 일 수정
     @Transactional
-    public TodoResponseDto updateTodo(Long id, TodoRequestDto dto) {
+    public TodoResponseDto updateTodo(Long id, TodoRequestDto dto, String username) {
         Todo todo = getTodoEntity(id);
+
+        if (!todo.getUser().getUsername().equals(username)) {
+            throw new IllegalArgumentException("본인의 할 일만 수정할 수 있습니다.");
+        }
 
         todo.setTitle(dto.getTitle());
         todo.setCompleted(dto.isCompleted());
@@ -70,37 +60,43 @@ public class TodoService {
         return new TodoResponseDto(todo);
     }
 
-    //할 일 삭제
     @Transactional
-    public void deleteTodo(Long id) {
+    public void deleteTodo(Long id, String username) {
         Todo todo = getTodoEntity(id);
+
+        if (!todo.getUser().getUsername().equals(username)) {
+            throw new IllegalArgumentException("본인의 할 일만 삭제할 수 있습니다.");
+        }
+
         tr.delete(todo);
     }
 
-    // [내부 로직] 엔티티 조회 (중복 제거용)
+    public TodoResponseDto getTodoById(Long id) {
+        return new TodoResponseDto(getTodoEntity(id));
+    }
+
+    public Page<TodoResponseDto> getAllTodosPaging(Pageable pageable) {
+        return tr.findAll(pageable).map(TodoResponseDto::new);
+    }
+
     private Todo getTodoEntity(Long id) {
         return tr.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("해당 할 일이 존재하지 않습니다. id: " + id));
     }
 
-    //키워드로 검색 기능
+
     public List<TodoResponseDto> searchTodos(String keyword) {
         return tr.findByTitleContaining(keyword).stream()
-                .map(TodoResponseDto::new)
-                .collect(Collectors.toList());
+                .map(TodoResponseDto::new).toList();
     }
 
-    //완료 여부 필터링 기능
     public List<TodoResponseDto> getTodoByStatus(boolean completed) {
         return tr.findByCompleted(completed).stream()
-                .map(TodoResponseDto::new)
-                .collect(Collectors.toList());
+                .map(TodoResponseDto::new).toList();
     }
 
-    //키워드 & 완료여부 함께 검색
     public List<TodoResponseDto> getTodoByKeywordAndStatus(String keyword, boolean completed) {
         return tr.findByTitleContainingAndCompleted(keyword, completed).stream()
-                .map(TodoResponseDto::new)
-                .collect(Collectors.toList());
+                .map(TodoResponseDto::new).toList();
     }
 }
