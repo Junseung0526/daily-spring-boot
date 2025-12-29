@@ -53,6 +53,13 @@ public class TodoController {
         return "삭제 성공!";
     }
 
+    @PatchMapping("/{id}/completed")
+    public TodoResponseDto toggleCompleted(
+            @PathVariable Long id,
+            @AuthenticationPrincipal String username){
+        return ts.toggleCompleted(id, username);
+    }
+
     // 페이징 조회
     @GetMapping("/paging")
     public Page<TodoResponseDto> getAllPaging(

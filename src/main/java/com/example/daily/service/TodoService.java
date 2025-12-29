@@ -71,6 +71,24 @@ public class TodoService {
         tr.delete(todo);
     }
 
+    //할 일 완료 상태 변경 (토글)
+    @Transactional
+    public TodoResponseDto toggleCompleted(Long id, String username) {
+        Todo todo = tr.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("해당 할 일이 존재하지 않습니다."));
+
+        //본인 확인
+        if (!todo.getUser().getUsername().equals(username)) {
+            throw new IllegalArgumentException("본인의 할 일만 수정할 수 있습니다.");
+        }
+
+        //상태 반전
+        todo.setCompleted(!todo.isCompleted());
+
+        return new TodoResponseDto(todo);
+
+    }
+
     public TodoResponseDto getTodoById(Long id) {
         return new TodoResponseDto(getTodoEntity(id));
     }

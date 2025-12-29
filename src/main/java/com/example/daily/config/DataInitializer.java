@@ -15,7 +15,7 @@ public class DataInitializer implements CommandLineRunner {
 
     private final TodoRepository tr;
     private final UserRepository ur;
-    private final PasswordEncoder passwordEncoder; // 💡 비번 암호화를 위해 주입
+    private final PasswordEncoder passwordEncoder;
 
     @Override
     public void run(String... args) {
