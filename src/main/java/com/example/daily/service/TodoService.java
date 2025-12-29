@@ -4,6 +4,7 @@ import com.example.daily.dto.TodoRequestDto;
 import com.example.daily.dto.TodoResponseDto;
 import com.example.daily.entity.Todo;
 import com.example.daily.entity.User;
+import com.example.daily.exception.ErrorCode;
 import com.example.daily.repository.TodoRepository;
 import com.example.daily.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -26,7 +27,7 @@ public class TodoService {
     @Transactional
     public TodoResponseDto createTodo(TodoRequestDto dto, String username) {
         User user = ur.findByUsername(username)
-                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+                .orElseThrow(() -> new IllegalArgumentException(ErrorCode.USER_NOT_FOUND.getMessage()));
 
         Todo todo = Todo.builder()
                 .title(dto.getTitle())
@@ -39,7 +40,7 @@ public class TodoService {
 
     public List<TodoResponseDto> getAllTodosByUser(String username) {
         User user = ur.findByUsername(username)
-                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+                .orElseThrow(() -> new IllegalArgumentException(ErrorCode.USER_NOT_FOUND.getMessage()));
 
         return tr.findAllByUser(user).stream()
                 .map(TodoResponseDto::new)
@@ -51,7 +52,7 @@ public class TodoService {
         Todo todo = getTodoEntity(id);
 
         if (!todo.getUser().getUsername().equals(username)) {
-            throw new IllegalArgumentException("본인의 할 일만 수정할 수 있습니다.");
+            throw new IllegalArgumentException(ErrorCode.UNAUTHORIZED_UPDATE.getMessage());
         }
 
         todo.setTitle(dto.getTitle());
@@ -65,28 +66,23 @@ public class TodoService {
         Todo todo = getTodoEntity(id);
 
         if (!todo.getUser().getUsername().equals(username)) {
-            throw new IllegalArgumentException("본인의 할 일만 삭제할 수 있습니다.");
+            throw new IllegalArgumentException(ErrorCode.UNAUTHORIZED_DELETE.getMessage());
         }
 
         tr.delete(todo);
     }
 
-    //할 일 완료 상태 변경 (토글)
     @Transactional
     public TodoResponseDto toggleCompleted(Long id, String username) {
-        Todo todo = tr.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("해당 할 일이 존재하지 않습니다."));
+        Todo todo = getTodoEntity(id);
 
-        //본인 확인
         if (!todo.getUser().getUsername().equals(username)) {
-            throw new IllegalArgumentException("본인의 할 일만 수정할 수 있습니다.");
+            throw new IllegalArgumentException(ErrorCode.UNAUTHORIZED_UPDATE.getMessage());
         }
 
-        //상태 반전
         todo.setCompleted(!todo.isCompleted());
 
         return new TodoResponseDto(todo);
-
     }
 
     public TodoResponseDto getTodoById(Long id) {
@@ -99,9 +95,8 @@ public class TodoService {
 
     private Todo getTodoEntity(Long id) {
         return tr.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("해당 할 일이 존재하지 않습니다. id: " + id));
+                .orElseThrow(() -> new IllegalArgumentException(ErrorCode.TODO_NOT_FOUND.getMessage()));
     }
-
 
     public List<TodoResponseDto> searchTodos(String keyword) {
         return tr.findByTitleContaining(keyword).stream()

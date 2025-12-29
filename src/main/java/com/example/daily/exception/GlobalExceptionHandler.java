@@ -1,31 +1,46 @@
 package com.example.daily.exception;
 
 import com.example.daily.dto.ErrorResponseDto;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+
+
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    //존재하지 않는 ID 조회 시
-    @ExceptionHandler(IllegalArgumentException.class)
-    public ResponseEntity<ErrorResponseDto> handleIllegalArgumentException(IllegalArgumentException e) {
-        ErrorResponseDto response = new ErrorResponseDto(HttpStatus.BAD_REQUEST.value(), e.getMessage());
-        return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+    private ResponseEntity<ErrorResponseDto> buildErrorResponse(ErrorCode errorCode) {
+        return ResponseEntity
+                .status(errorCode.getStatus())
+                .body(ErrorResponseDto.builder()
+                        .status(errorCode.getStatus().value())
+                        .code(errorCode.getCode())
+                        .message(errorCode.getMessage())
+                        .build());
     }
 
-    //@Valid 검증 실패 시
-    @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ErrorResponseDto> handleMethodArgumentNotValidException(MethodArgumentNotValidException e) {
-        String errorMessage = e.getBindingResult().getAllErrors().get(0).getDefaultMessage();
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<ErrorResponseDto> handleIllegalArgumentException(IllegalArgumentException e) {
+        return ResponseEntity
+                .status(400)
+                .body(ErrorResponseDto.builder()
+                        .status(400)
+                        .code("BAD_REQUEST")
+                        .message(e.getMessage())
+                        .build());
+    }
 
-        ErrorResponseDto response = new ErrorResponseDto(
-                HttpStatus.BAD_REQUEST.value(),
-                errorMessage
-        );
-        return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<ErrorResponseDto> handleValidationException(MethodArgumentNotValidException e) {
+        String message = e.getBindingResult().getAllErrors().get(0).getDefaultMessage();
+        return ResponseEntity
+                .status(400)
+                .body(ErrorResponseDto.builder()
+                        .status(400)
+                        .code(ErrorCode.INVALID_INPUT_VALUE.getCode())
+                        .message(message)
+                        .build());
     }
 }
