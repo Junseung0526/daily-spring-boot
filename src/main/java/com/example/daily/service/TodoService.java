@@ -4,6 +4,7 @@ import com.example.daily.dto.TodoRequestDto;
 import com.example.daily.dto.TodoResponseDto;
 import com.example.daily.entity.Todo;
 import com.example.daily.entity.User;
+import com.example.daily.entity.UserRoleEnum;
 import com.example.daily.exception.ErrorCode;
 import com.example.daily.repository.TodoRepository;
 import com.example.daily.repository.UserRepository;
@@ -26,8 +27,7 @@ public class TodoService {
 
     @Transactional
     public TodoResponseDto createTodo(TodoRequestDto dto, String username) {
-        User user = ur.findByUsername(username)
-                .orElseThrow(() -> new IllegalArgumentException(ErrorCode.USER_NOT_FOUND.getMessage()));
+        User user = getUserByUsername(username);
 
         Todo todo = Todo.builder()
                 .title(dto.getTitle())
@@ -39,8 +39,7 @@ public class TodoService {
     }
 
     public List<TodoResponseDto> getAllTodosByUser(String username) {
-        User user = ur.findByUsername(username)
-                .orElseThrow(() -> new IllegalArgumentException(ErrorCode.USER_NOT_FOUND.getMessage()));
+        User user = getUserByUsername(username);
 
         return tr.findAllByUser(user).stream()
                 .map(TodoResponseDto::new)
@@ -50,8 +49,10 @@ public class TodoService {
     @Transactional
     public TodoResponseDto updateTodo(Long id, TodoRequestDto dto, String username) {
         Todo todo = getTodoEntity(id);
+        User user = getUserByUsername(username);
 
-        if (!todo.getUser().getUsername().equals(username)) {
+        // 본인 확인 OR 관리자 확인 (마스터키 로직)
+        if (!todo.getUser().getUsername().equals(username) && user.getRole() != UserRoleEnum.ADMIN) {
             throw new IllegalArgumentException(ErrorCode.UNAUTHORIZED_UPDATE.getMessage());
         }
 
@@ -64,8 +65,10 @@ public class TodoService {
     @Transactional
     public void deleteTodo(Long id, String username) {
         Todo todo = getTodoEntity(id);
+        User user = getUserByUsername(username);
 
-        if (!todo.getUser().getUsername().equals(username)) {
+        // 본인 확인 OR 관리자 확인
+        if (!todo.getUser().getUsername().equals(username) && user.getRole() != UserRoleEnum.ADMIN) {
             throw new IllegalArgumentException(ErrorCode.UNAUTHORIZED_DELETE.getMessage());
         }
 
@@ -75,8 +78,10 @@ public class TodoService {
     @Transactional
     public TodoResponseDto toggleCompleted(Long id, String username) {
         Todo todo = getTodoEntity(id);
+        User user = getUserByUsername(username);
 
-        if (!todo.getUser().getUsername().equals(username)) {
+        // 본인 확인 OR 관리자 확인
+        if (!todo.getUser().getUsername().equals(username) && user.getRole() != UserRoleEnum.ADMIN) {
             throw new IllegalArgumentException(ErrorCode.UNAUTHORIZED_UPDATE.getMessage());
         }
 
@@ -93,9 +98,15 @@ public class TodoService {
         return tr.findAll(pageable).map(TodoResponseDto::new);
     }
 
+    // 내부 로직용 공통 메서드들
     private Todo getTodoEntity(Long id) {
         return tr.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException(ErrorCode.TODO_NOT_FOUND.getMessage()));
+    }
+
+    private User getUserByUsername(String username) {
+        return ur.findByUsername(username)
+                .orElseThrow(() -> new IllegalArgumentException(ErrorCode.USER_NOT_FOUND.getMessage()));
     }
 
     public List<TodoResponseDto> searchTodos(String keyword) {

@@ -3,6 +3,7 @@ package com.example.daily.service;
 import com.example.daily.dto.UserRequestDto;
 import com.example.daily.dto.UserResponseDto;
 import com.example.daily.entity.User;
+import com.example.daily.entity.UserRoleEnum;
 import com.example.daily.exception.ErrorCode;
 import com.example.daily.repository.UserRepository;
 import com.example.daily.util.JwtUtil;
@@ -22,15 +23,28 @@ public class UserService {
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
 
+    //이건 다른데서 사용시 환경 변수로 적용시켜야 함
+    private final String ADMIN_TOKEN = "AAABnvxRVklrnYxKZ0aHgOTdqygdgHYiq";
+
     @Transactional
     public UserResponseDto createUser(UserRequestDto dto) {
+        // 중복 확인
         if (ur.existsByUsername(dto.getUsername())) {
             throw new IllegalArgumentException(ErrorCode.DUPLICATE_USERNAME.getMessage());
         }
 
-        String encodedPassword = passwordEncoder.encode(dto.getPassword());
+        // 권한 확인 및 결정
+        UserRoleEnum role = UserRoleEnum.USER;
+        if (dto.isAdmin()) {
+            if (!ADMIN_TOKEN.equals(dto.getAdminToken())) {
+                throw new IllegalArgumentException("관리자 암호가 틀려 등록이 불가능합니다.");
+            }
+            role = UserRoleEnum.ADMIN;
+        }
 
-        User user = new User(dto.getUsername(), encodedPassword, dto.getEmail());
+        // 비밀번호 암호화 및 유저 생성
+        String encodedPassword = passwordEncoder.encode(dto.getPassword());
+        User user = new User(dto.getUsername(), encodedPassword, dto.getEmail(), role);
         return new UserResponseDto(ur.save(user));
     }
 

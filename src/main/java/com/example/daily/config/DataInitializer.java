@@ -2,6 +2,7 @@ package com.example.daily.config;
 
 import com.example.daily.entity.Todo;
 import com.example.daily.entity.User;
+import com.example.daily.entity.UserRoleEnum;
 import com.example.daily.repository.TodoRepository;
 import com.example.daily.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -22,7 +23,7 @@ public class DataInitializer implements CommandLineRunner {
         if (ur.count() == 0) {
             // 1. 테스트용 유저 생성
             String encodedPassword = passwordEncoder.encode("1234");
-            User admin = new User("admin", encodedPassword, "admin@test.com");
+            User admin = new User("admin", encodedPassword, "admin@test.com", UserRoleEnum.ADMIN);
             ur.save(admin);
 
             // 2. 유저에게 할 일 할당 및 저장
