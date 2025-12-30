@@ -40,7 +40,6 @@ class TodoServiceTest {
         @Test
         @DisplayName("성공 - 작성자 본인은 본인의 할 일을 수정할 수 있다")
         void updateTodo_Success_Owner() {
-            // given
             Long todoId = 1L;
             String username = "userA";
             User user = new User(username, "pass", "userA@test.com", UserRoleEnum.USER);
@@ -50,10 +49,8 @@ class TodoServiceTest {
             given(todoRepository.findById(todoId)).willReturn(Optional.of(todo));
             given(userRepository.findByUsername(username)).willReturn(Optional.of(user));
 
-            // when
             TodoResponseDto result = todoService.updateTodo(todoId, requestDto, username);
 
-            // then
             assertEquals("수정된 제목", result.getTitle());
             assertTrue(todo.isCompleted());
         }
@@ -61,7 +58,6 @@ class TodoServiceTest {
         @Test
         @DisplayName("성공 - 관리자는 다른 유저의 할 일을 수정할 수 있다")
         void updateTodo_Success_Admin() {
-            // given
             Long todoId = 1L;
             String adminName = "adminUser";
             User owner = new User("userA", "pass", "userA@test.com", UserRoleEnum.USER);
@@ -72,17 +68,14 @@ class TodoServiceTest {
             given(todoRepository.findById(todoId)).willReturn(Optional.of(todo));
             given(userRepository.findByUsername(adminName)).willReturn(Optional.of(admin));
 
-            // when
             TodoResponseDto result = todoService.updateTodo(todoId, requestDto, adminName);
 
-            // then
             assertEquals("관리자 수정", result.getTitle());
         }
 
         @Test
         @DisplayName("실패 - 본인이 아니고 관리자도 아니면 예외가 발생한다")
         void updateTodo_Fail_Unauthorized() {
-            // given
             Long todoId = 1L;
             String intruderName = "intruder";
             User owner = new User("userA", "pass", "userA@test.com", UserRoleEnum.USER);
@@ -93,7 +86,6 @@ class TodoServiceTest {
             given(todoRepository.findById(todoId)).willReturn(Optional.of(todo));
             given(userRepository.findByUsername(intruderName)).willReturn(Optional.of(intruder));
 
-            // when & then
             IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
                 todoService.updateTodo(todoId, requestDto, intruderName)
             );
