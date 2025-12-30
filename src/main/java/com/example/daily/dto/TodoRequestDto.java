@@ -3,11 +3,13 @@ package com.example.daily.dto;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Getter
 @NoArgsConstructor
+@AllArgsConstructor
 public class TodoRequestDto {
 
     @Schema(description = "할 일 제목", example = "스프링 공부하기")
