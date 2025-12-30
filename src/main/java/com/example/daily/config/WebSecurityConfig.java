@@ -36,6 +36,10 @@ public class WebSecurityConfig {
                 .requestMatchers("/api/users/signup", "/api/users/login").permitAll()
                 // 스웨거 허용
                 .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
+
+                // 관리자 전용 API 접근 허용
+                .requestMatchers("/api/admin/**").hasRole("ADMIN")
+
                 // 그 외 모든 요청은 로그인 필요
                 .anyRequest().authenticated()
         );
