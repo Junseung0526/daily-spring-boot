@@ -9,6 +9,8 @@ import com.example.daily.exception.ErrorCode;
 import com.example.daily.repository.TodoRepository;
 import com.example.daily.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -25,6 +27,8 @@ public class TodoService {
     private final TodoRepository tr;
     private final UserRepository ur;
 
+    // 새 글 작성 시 기존 캐시 삭제
+    @CacheEvict(value = "todoList", key = "#username")
     @Transactional
     public TodoResponseDto createTodo(TodoRequestDto dto, String username) {
         User user = getUserByUsername(username);
@@ -38,6 +42,8 @@ public class TodoService {
         return new TodoResponseDto(tr.save(todo));
     }
 
+    // 캐시 적용
+    @Cacheable(value = "todoList", key = "#username", cacheManager = "cacheManager")
     public List<TodoResponseDto> getAllTodosByUser(String username) {
         User user = getUserByUsername(username);
 
@@ -46,12 +52,13 @@ public class TodoService {
                 .collect(Collectors.toList());
     }
 
+    // 수정 시 캐시 삭제
+    @CacheEvict(value = "todoList", key = "#username")
     @Transactional
     public TodoResponseDto updateTodo(Long id, TodoRequestDto dto, String username) {
         Todo todo = getTodoEntity(id);
         User user = getUserByUsername(username);
 
-        // 본인 확인 OR 관리자 확인 (마스터키 로직)
         if (!todo.getUser().getUsername().equals(username) && user.getRole() != UserRoleEnum.ADMIN) {
             throw new IllegalArgumentException(ErrorCode.UNAUTHORIZED_UPDATE.getMessage());
         }
@@ -62,12 +69,13 @@ public class TodoService {
         return new TodoResponseDto(todo);
     }
 
+    // 삭제 시 캐시 삭제
+    @CacheEvict(value = "todoList", key = "#username")
     @Transactional
     public void deleteTodo(Long id, String username) {
         Todo todo = getTodoEntity(id);
         User user = getUserByUsername(username);
 
-        // 본인 확인 OR 관리자 확인
         if (!todo.getUser().getUsername().equals(username) && user.getRole() != UserRoleEnum.ADMIN) {
             throw new IllegalArgumentException(ErrorCode.UNAUTHORIZED_DELETE.getMessage());
         }
@@ -75,12 +83,13 @@ public class TodoService {
         tr.delete(todo);
     }
 
+    // 상태 변경 시 캐시 삭제
+    @CacheEvict(value = "todoList", key = "#username")
     @Transactional
     public TodoResponseDto toggleCompleted(Long id, String username) {
         Todo todo = getTodoEntity(id);
         User user = getUserByUsername(username);
 
-        // 본인 확인 OR 관리자 확인
         if (!todo.getUser().getUsername().equals(username) && user.getRole() != UserRoleEnum.ADMIN) {
             throw new IllegalArgumentException(ErrorCode.UNAUTHORIZED_UPDATE.getMessage());
         }
@@ -98,7 +107,6 @@ public class TodoService {
         return tr.findAll(pageable).map(TodoResponseDto::new);
     }
 
-    // 내부 로직용 공통 메서드들
     private Todo getTodoEntity(Long id) {
         return tr.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException(ErrorCode.TODO_NOT_FOUND.getMessage()));

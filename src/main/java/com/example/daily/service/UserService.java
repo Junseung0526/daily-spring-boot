@@ -8,6 +8,8 @@ import com.example.daily.exception.ErrorCode;
 import com.example.daily.repository.UserRepository;
 import com.example.daily.util.JwtUtil;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,17 +25,14 @@ public class UserService {
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
 
-    //이건 다른데서 사용시 환경 변수로 적용시켜야 함
     private final String ADMIN_TOKEN = "AAABnvxRVklrnYxKZ0aHgOTdqygdgHYiq";
 
     @Transactional
     public UserResponseDto createUser(UserRequestDto dto) {
-        // 중복 확인
         if (ur.existsByUsername(dto.getUsername())) {
             throw new IllegalArgumentException(ErrorCode.DUPLICATE_USERNAME.getMessage());
         }
 
-        // 권한 확인 및 결정
         UserRoleEnum role = UserRoleEnum.USER;
         if (dto.isAdmin()) {
             if (!ADMIN_TOKEN.equals(dto.getAdminToken())) {
@@ -42,7 +41,6 @@ public class UserService {
             role = UserRoleEnum.ADMIN;
         }
 
-        // 비밀번호 암호화 및 유저 생성
         String encodedPassword = passwordEncoder.encode(dto.getPassword());
         User user = new User(dto.getUsername(), encodedPassword, dto.getEmail(), role);
         return new UserResponseDto(ur.save(user));
@@ -68,6 +66,8 @@ public class UserService {
         );
     }
 
+    //단일 유저 조회 캐싱: 유저 정보가 바뀌기 전까지는 Redis에서 가져옴
+    @Cacheable(value = "userProfile", key = "#userId", cacheManager = "cacheManager")
     @Transactional(readOnly = true)
     public UserResponseDto getUserDtoById(Long userId) {
         User user = getUserById(userId);
@@ -81,6 +81,8 @@ public class UserService {
                 .collect(Collectors.toList());
     }
 
+    //유저 삭제 시 관련 캐시도 함께 삭제
+    @CacheEvict(value = "userProfile", key = "#userId")
     @Transactional
     public void deleteUser(Long userId) {
         User user = getUserById(userId);
