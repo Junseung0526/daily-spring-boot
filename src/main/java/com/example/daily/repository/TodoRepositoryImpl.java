@@ -1,0 +1,48 @@
+package com.example.daily.repository;
+
+import com.example.daily.entity.QTag;
+import com.example.daily.entity.QTodo;
+import com.example.daily.entity.Todo;
+import com.querydsl.core.types.dsl.BooleanExpression;
+import com.querydsl.jpa.impl.JPAQueryFactory;
+import lombok.RequiredArgsConstructor;
+import java.util.List;
+
+import static com.example.daily.entity.QTag.tag;
+import static com.example.daily.entity.QTodo.todo;
+
+@RequiredArgsConstructor
+public class TodoRepositoryImpl implements TodoRepositoryCustom {
+
+    private final JPAQueryFactory queryFactory;
+
+    @Override
+    public List<Todo> searchTodos(String title, String tagName, Boolean completed, String username) {
+        return queryFactory
+                .selectFrom(todo)
+                .leftJoin(todo.tags, tag).fetchJoin() // 태그 성능 최적화
+                .where(
+                        titleContains(title),
+                        tagEq(tagName),
+                        completedEq(completed),
+                        usernameEq(username)
+                )
+                .fetch();
+    }
+
+    private BooleanExpression titleContains(String title) {
+        return title != null ? todo.title.contains(title) : null;
+    }
+
+    private BooleanExpression tagEq(String tagName) {
+        return tagName != null ? tag.name.eq(tagName) : null;
+    }
+
+    private BooleanExpression completedEq(Boolean completed) {
+        return completed != null ? todo.completed.eq(completed) : null;
+    }
+
+    private BooleanExpression usernameEq(String username) {
+        return todo.user.username.eq(username);
+    }
+}

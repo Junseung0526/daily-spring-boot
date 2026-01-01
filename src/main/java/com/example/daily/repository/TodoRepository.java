@@ -10,7 +10,7 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 
 @Repository
-public interface TodoRepository extends JpaRepository<Todo, Long> {
+public interface TodoRepository extends JpaRepository<Todo, Long>, TodoRepositoryCustom {
     // 인터페이스만 선언해도 기본적인 Save, Find, Delete 메서드가 자동 생성
 
     List<Todo> findByTitleContaining(String keyword);

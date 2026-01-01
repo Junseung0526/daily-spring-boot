@@ -31,7 +31,6 @@ public class TodoService {
     private final UserRepository ur;
     private final TagRepository tagRepository;
 
-    // 새 글 작성 시 기존 캐시 삭제
     @CacheEvict(value = "todoList", key = "#username")
     @Transactional
     public TodoResponseDto createTodo(TodoRequestDto dto, String username) {
@@ -44,102 +43,80 @@ public class TodoService {
                 .build();
         todo.setUser(user);
 
-        //태그 추가
-        if (dto.getTagNames() != null && !dto.getTagNames().isEmpty()) {
-            for (String tagName : dto.getTagNames()) {
-                Tag tag = tagRepository.findByName(tagName)
-                        .orElseGet(() -> tagRepository.save(new Tag(tagName)));
-
-                todo.addTag(tag);
-            }
-        }
+        processTags(dto.getTagNames(), todo);
 
         Todo savedTodo = tr.save(todo);
         return new TodoResponseDto(savedTodo);
     }
 
-    // 캐시 적용
     @Cacheable(value = "todoList", key = "#username", cacheManager = "cacheManager")
     public List<TodoResponseDto> getAllTodosByUser(String username) {
         User user = getUserByUsername(username);
-
         return tr.findAllByUser(user).stream()
                 .map(TodoResponseDto::new)
                 .collect(Collectors.toList());
     }
 
-    // 수정 시 캐시 삭제
+    /**
+     * 3. 동적 검색 (QueryDSL 활용)
+     * 검색 조건: 제목(키워드), 태그명, 완료 여부
+     * 주의: 검색 결과는 조건이 다양하므로 캐시를 적용하지 않는 것이 일반적입니다.
+     */
+    public List<TodoResponseDto> searchTodosDynamic(String title, String tagName, Boolean completed, String username) {
+        return tr.searchTodos(title, tagName, completed, username).stream()
+                .map(TodoResponseDto::new)
+                .collect(Collectors.toList());
+    }
+
     @CacheEvict(value = "todoList", key = "#username")
     @Transactional
     public TodoResponseDto updateTodo(Long id, TodoRequestDto dto, String username) {
         Todo todo = getTodoEntity(id);
-        User user = getUserByUsername(username);
-
-        if (!todo.getUser().getUsername().equals(username) && user.getRole() != UserRoleEnum.ADMIN) {
-            throw new IllegalArgumentException(ErrorCode.UNAUTHORIZED_UPDATE.getMessage());
-        }
+        checkAuthority(todo, username);
 
         todo.setTitle(dto.getTitle());
         todo.setCompleted(dto.isCompleted());
 
-        //태그 수정
         if (dto.getTagNames() != null) {
-            //기존 태그 삭제
             todo.getTags().clear();
+            processTags(dto.getTagNames(), todo);
+        }
 
-            //태그 추가
-            for (String tagName : dto.getTagNames()) {
+        return new TodoResponseDto(todo);
+    }
+
+    @CacheEvict(value = "todoList", key = "#username")
+    @Transactional
+    public void deleteTodo(Long id, String username) {
+        Todo todo = getTodoEntity(id);
+        checkAuthority(todo, username);
+        tr.delete(todo);
+    }
+
+    @CacheEvict(value = "todoList", key = "#username")
+    @Transactional
+    public TodoResponseDto toggleCompleted(Long id, String username) {
+        Todo todo = getTodoEntity(id);
+        checkAuthority(todo, username);
+        todo.setCompleted(!todo.isCompleted());
+        return new TodoResponseDto(todo);
+    }
+
+    private void processTags(List<String> tagNames, Todo todo) {
+        if (tagNames != null && !tagNames.isEmpty()) {
+            for (String tagName : tagNames) {
                 Tag tag = tagRepository.findByName(tagName)
                         .orElseGet(() -> tagRepository.save(new Tag(tagName)));
                 todo.addTag(tag);
             }
         }
-
-        return new TodoResponseDto(todo);
     }
 
-    // 삭제 시 캐시 삭제
-    @CacheEvict(value = "todoList", key = "#username")
-    @Transactional
-    public void deleteTodo(Long id, String username) {
-        Todo todo = getTodoEntity(id);
+    private void checkAuthority(Todo todo, String username) {
         User user = getUserByUsername(username);
-
-        if (!todo.getUser().getUsername().equals(username) && user.getRole() != UserRoleEnum.ADMIN) {
-            throw new IllegalArgumentException(ErrorCode.UNAUTHORIZED_DELETE.getMessage());
-        }
-
-        tr.delete(todo);
-    }
-
-    // 상태 변경 시 캐시 삭제
-    @CacheEvict(value = "todoList", key = "#username")
-    @Transactional
-    public TodoResponseDto toggleCompleted(Long id, String username) {
-        Todo todo = getTodoEntity(id);
-        User user = getUserByUsername(username);
-
         if (!todo.getUser().getUsername().equals(username) && user.getRole() != UserRoleEnum.ADMIN) {
             throw new IllegalArgumentException(ErrorCode.UNAUTHORIZED_UPDATE.getMessage());
         }
-
-        todo.setCompleted(!todo.isCompleted());
-
-        return new TodoResponseDto(todo);
-    }
-
-    @Transactional(readOnly = true)
-    public List<TodoResponseDto> getTodosByTagName(String tagName) {
-        List<Todo> todos = tr.findAllByTagName(tagName);
-        return todos.stream().map(TodoResponseDto::new).toList();
-    }
-
-    public TodoResponseDto getTodoById(Long id) {
-        return new TodoResponseDto(getTodoEntity(id));
-    }
-
-    public Page<TodoResponseDto> getAllTodosPaging(Pageable pageable) {
-        return tr.findAll(pageable).map(TodoResponseDto::new);
     }
 
     private Todo getTodoEntity(Long id) {
@@ -152,18 +129,11 @@ public class TodoService {
                 .orElseThrow(() -> new IllegalArgumentException(ErrorCode.USER_NOT_FOUND.getMessage()));
     }
 
-    public List<TodoResponseDto> searchTodos(String keyword) {
-        return tr.findByTitleContaining(keyword).stream()
-                .map(TodoResponseDto::new).toList();
+    public TodoResponseDto getTodoById(Long id) {
+        return new TodoResponseDto(getTodoEntity(id));
     }
 
-    public List<TodoResponseDto> getTodoByStatus(boolean completed) {
-        return tr.findByCompleted(completed).stream()
-                .map(TodoResponseDto::new).toList();
-    }
-
-    public List<TodoResponseDto> getTodoByKeywordAndStatus(String keyword, boolean completed) {
-        return tr.findByTitleContainingAndCompleted(keyword, completed).stream()
-                .map(TodoResponseDto::new).toList();
+    public Page<TodoResponseDto> getAllTodosPaging(Pageable pageable) {
+        return tr.findAll(pageable).map(TodoResponseDto::new);
     }
 }
