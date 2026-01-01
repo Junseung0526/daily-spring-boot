@@ -2,10 +2,12 @@ package com.example.daily.service;
 
 import com.example.daily.dto.TodoRequestDto;
 import com.example.daily.dto.TodoResponseDto;
+import com.example.daily.entity.Tag;
 import com.example.daily.entity.Todo;
 import com.example.daily.entity.User;
 import com.example.daily.entity.UserRoleEnum;
 import com.example.daily.exception.ErrorCode;
+import com.example.daily.repository.TagRepository;
 import com.example.daily.repository.TodoRepository;
 import com.example.daily.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -16,6 +18,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -26,6 +29,7 @@ public class TodoService {
 
     private final TodoRepository tr;
     private final UserRepository ur;
+    private final TagRepository tagRepository;
 
     // 새 글 작성 시 기존 캐시 삭제
     @CacheEvict(value = "todoList", key = "#username")
@@ -36,10 +40,22 @@ public class TodoService {
         Todo todo = Todo.builder()
                 .title(dto.getTitle())
                 .completed(dto.isCompleted())
+                .tags(new ArrayList<>())
                 .build();
         todo.setUser(user);
 
-        return new TodoResponseDto(tr.save(todo));
+        //태그 추가
+        if (dto.getTagNames() != null && !dto.getTagNames().isEmpty()) {
+            for (String tagName : dto.getTagNames()) {
+                Tag tag = tagRepository.findByName(tagName)
+                        .orElseGet(() -> tagRepository.save(new Tag(tagName)));
+
+                todo.addTag(tag);
+            }
+        }
+
+        Todo savedTodo = tr.save(todo);
+        return new TodoResponseDto(savedTodo);
     }
 
     // 캐시 적용
@@ -65,6 +81,19 @@ public class TodoService {
 
         todo.setTitle(dto.getTitle());
         todo.setCompleted(dto.isCompleted());
+
+        //태그 수정
+        if(dto.getTagNames() != null) {
+            //기존 태그 삭제
+            todo.getTags().clear();
+
+            //태그 추가
+            for(String tagName : dto.getTagNames()) {
+                Tag tag = tagRepository.findByName(tagName)
+                        .orElseGet(() -> tagRepository.save(new Tag(tagName)));
+                todo.addTag(tag);
+            }
+        }
 
         return new TodoResponseDto(todo);
     }

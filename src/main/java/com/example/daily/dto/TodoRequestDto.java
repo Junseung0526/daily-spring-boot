@@ -7,6 +7,8 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
+
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
@@ -19,4 +21,6 @@ public class TodoRequestDto {
 
     @Schema(description = "완료 여부", example = "false")
     private boolean completed;
+
+    private List<String> tagNames;
 }

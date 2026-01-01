@@ -3,6 +3,9 @@ package com.example.daily.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Entity
 @Getter
 @Setter
@@ -28,5 +31,18 @@ public class Todo {
     public void setUser(User user) {
         this.user = user;
         user.getTodoList().add(this);
+    }
+
+    @ManyToMany
+    @JoinTable(
+            name = "todo_tag",
+            joinColumns = @JoinColumn(name = "todo_id"),
+            inverseJoinColumns = @JoinColumn(name = "tag_id")
+    )
+    private List<Tag> tags = new ArrayList<>();
+
+    public void addTag(Tag tag) {
+        this.tags.add(tag);
+        tag.getTodos().add(this);
     }
 }
