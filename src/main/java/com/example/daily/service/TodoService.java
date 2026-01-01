@@ -83,12 +83,12 @@ public class TodoService {
         todo.setCompleted(dto.isCompleted());
 
         //태그 수정
-        if(dto.getTagNames() != null) {
+        if (dto.getTagNames() != null) {
             //기존 태그 삭제
             todo.getTags().clear();
 
             //태그 추가
-            for(String tagName : dto.getTagNames()) {
+            for (String tagName : dto.getTagNames()) {
                 Tag tag = tagRepository.findByName(tagName)
                         .orElseGet(() -> tagRepository.save(new Tag(tagName)));
                 todo.addTag(tag);
@@ -126,6 +126,12 @@ public class TodoService {
         todo.setCompleted(!todo.isCompleted());
 
         return new TodoResponseDto(todo);
+    }
+
+    @Transactional(readOnly = true)
+    public List<TodoResponseDto> getTodosByTagName(String tagName) {
+        List<Todo> todos = tr.findAllByTagName(tagName);
+        return todos.stream().map(TodoResponseDto::new).toList();
     }
 
     public TodoResponseDto getTodoById(Long id) {

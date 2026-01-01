@@ -11,6 +11,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
@@ -75,6 +76,12 @@ public class TodoController {
     @GetMapping("/{id}")
     public TodoResponseDto getById(@PathVariable Long id) {
         return ts.getTodoById(id);
+    }
+
+    @Operation(summary = "태그 별 조회", description = "태그로 검색시 조회 기능을 제공합니다.")
+    @GetMapping("/search/tag")
+    public ResponseEntity<List<TodoResponseDto>> getTodosByTag(@RequestParam String tagName) {
+        return ResponseEntity.ok(ts.getTodosByTagName(tagName));
     }
 
     @Operation(summary = "검색", description = "키워드 검색: GET /api/todos/search?keyword=공부\n" +
