@@ -62,10 +62,9 @@ public class TodoService {
      * 검색 조건: 제목(키워드), 태그명, 완료 여부
      * 주의: 검색 결과는 조건이 다양하므로 캐시를 적용하지 않는 것이 일반적입니다.
      */
-    public List<TodoResponseDto> searchTodosDynamic(String title, String tagName, Boolean completed, String username) {
-        return tr.searchTodos(title, tagName, completed, username).stream()
-                .map(TodoResponseDto::new)
-                .collect(Collectors.toList());
+    public Page<TodoResponseDto> searchTodosDynamic(String title, String tagName, Boolean completed, String username, Pageable pageable) {
+        return tr.searchTodos(title, tagName, completed, username, pageable)
+                .map(TodoResponseDto::new);
     }
 
     @CacheEvict(value = "todoList", key = "#username")

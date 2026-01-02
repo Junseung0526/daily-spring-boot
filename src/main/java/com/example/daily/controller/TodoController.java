@@ -67,12 +67,14 @@ public class TodoController {
 
     @Operation(summary = "통합 동적 검색", description = "제목, 태그명, 완료 여부를 조합하여 내 할 일 목록 내에서 검색합니다.")
     @GetMapping("/search")
-    public ResponseEntity<List<TodoResponseDto>> search(
-            @RequestParam(required = false) String title,
-            @RequestParam(required = false) String tagName,
-            @RequestParam(required = false) Boolean completed,
-            @AuthenticationPrincipal String username) {
-        return ResponseEntity.ok(ts.searchTodosDynamic(title, tagName, completed, username));
+    public ResponseEntity<Page<TodoResponseDto>> search(
+                                                         @RequestParam(required = false) String title,
+                                                         @RequestParam(required = false) String tagName,
+                                                         @RequestParam(required = false) Boolean completed,
+                                                         @AuthenticationPrincipal String username,
+                                                         @PageableDefault(size = 5) Pageable pageable) {
+
+        return ResponseEntity.ok(ts.searchTodosDynamic(title, tagName, completed, username, pageable));
     }
 
     @Operation(summary = "할 일 페이징 조회", description = "페이지 단위로 할 일을 조회합니다.")
