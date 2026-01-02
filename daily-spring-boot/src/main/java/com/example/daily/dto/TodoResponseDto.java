@@ -13,6 +13,7 @@ public class TodoResponseDto {
     private String title;
     private boolean completed;
     private List<String> tagList;
+    private String weather;
 
     public TodoResponseDto(Todo todo) {
         this.id = todo.getId();
@@ -21,5 +22,6 @@ public class TodoResponseDto {
         this.tagList = todo.getTags().stream()
                 .map(Tag::getName)
                 .collect(Collectors.toList());
+        this.weather = todo.getWeather();
     }
 }

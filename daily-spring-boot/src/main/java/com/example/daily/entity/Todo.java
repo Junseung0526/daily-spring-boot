@@ -24,6 +24,9 @@ public class Todo extends Timestamped {
     @Column(nullable = false)
     private boolean completed;
 
+    @Column
+    private String weather;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
     private User user;
