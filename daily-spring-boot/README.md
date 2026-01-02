@@ -15,6 +15,7 @@
 * **Security**: Spring Security, JWT (jjwt 0.11.5)
 * **Database**: H2 (In-memory), Spring Data JPA
 * **Caching**: Redis (Lettuce)
+* **External API**: OpenWeatherMap API (실시간 날씨 연동)
 * **Documentation**: SpringDoc OpenAPI v2 (Swagger)
 
 ---
@@ -29,12 +30,16 @@
 ### 2. 성능 최적화 (Redis Caching)
 * **프로필 및 목록 캐싱**: 유저 정보 조회 및 할 일 목록 조회 시 Redis를 사용하여 DB 부하를 줄이고 응답 속도를 높였습니다.
 * **캐시 일관성**: 데이터가 변경(생성, 수정, 삭제)될 때 관련 캐시를 즉시 삭제(`@CacheEvict`)하여 데이터 정합성을 유지합니다.
+* **QueryDSL 동적 검색**: 제목(키워드), 태그명, 완료 여부를 조합하여 복잡한 조건의 검색을 null-safe하게 처리합니다.
 
 ### 3. 할 일 관리 (Todo Service)
 * **개인화된 목록**: 모든 유저는 자신만의 할 일 목록을 가지며, 타인의 데이터에 대한 접근이 차단됩니다.
 * **상태 토글**: 할 일의 완료 여부를 간단하게 반전(True/False)시킬 수 있는 기능을 제공합니다.
 * **검색 및 페이징**: 제목 키워드 검색, 완료 여부 필터링 및 페이징 처리를 통해 효율적인 조회가 가능합니다.
 
+### 4. 외부 API 연동 (Weather Service)
+* **실시간 날씨 기록**: 할 일을 등록하는 시점(createTodo)의 서울 날씨 정보를 OpenWeatherMap API를 통해 가져와 함께 저장합니다.
+* **데이터 부가 정보**: 각 할 일 데이터에 날씨 정보(예: Clouds, Rain, Clear)가 포함되어 사용자 경험을 향상시킵니다.
 ---
 
 ## 주요 API 명세
