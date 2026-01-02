@@ -7,7 +7,6 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 
-
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
@@ -41,6 +40,17 @@ public class GlobalExceptionHandler {
                         .status(400)
                         .code(ErrorCode.INVALID_INPUT_VALUE.getCode())
                         .message(message)
+                        .build());
+    }
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ErrorResponseDto> handleAllException(Exception e) {
+        return ResponseEntity
+                .status(500)
+                .body(ErrorResponseDto.builder()
+                        .status(500)
+                        .code("INTERNAL_SERVER_ERROR")
+                        .message("서버 내부 오류가 발생했습니다.")
                         .build());
     }
 }
