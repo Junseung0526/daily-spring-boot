@@ -16,7 +16,7 @@ public class UserRequestDto {
     @Pattern(regexp = "^[a-z0-9]{4,10}$", message = "아이디는 알파벳 소문자(a~z), 숫자(0~9)로 구성된 4~10자여야 합니다.")
     private String username;
 
-    @Schema(description = "비밀번호", example = "1234")
+    @Schema(description = "비밀번호", example = "Abc1234!")
     @NotBlank(message = "비밀번호는 필수입니다.")
     @Pattern(regexp = "^[a-zA-Z0-9!@#$%^&*()_+\\-=\\[\\]{};':\"\\\\|,.<>\\/?]{8,15}$", message = "비밀번호는 알파벳 대소문자, 숫자, 특수문자로 구성된 8~15자여야 합니다.")
     private String password;
