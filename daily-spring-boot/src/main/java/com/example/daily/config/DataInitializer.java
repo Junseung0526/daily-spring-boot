@@ -29,7 +29,7 @@ public class DataInitializer implements CommandLineRunner {
     public void run(String... args) {
         if (ur.count() == 0) {
             // 1. 테스트 유저 생성
-            String encodedPassword = passwordEncoder.encode("1234");
+            String encodedPassword = passwordEncoder.encode("Abc1234!");
             User admin = new User("admin", encodedPassword, "admin@test.com", UserRoleEnum.ADMIN);
             ur.save(admin);
 
