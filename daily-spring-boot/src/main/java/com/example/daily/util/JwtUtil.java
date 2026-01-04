@@ -8,8 +8,8 @@ import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.UnsupportedJwtException;
 import io.jsonwebtoken.security.Keys;
 import jakarta.annotation.PostConstruct;
-import org.springframework.beans.factory.annotation.Value;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.security.Key;
@@ -20,12 +20,13 @@ import java.util.Date;
 @Component
 public class JwtUtil {
 
-    // 토큰의 헤더에 들어갈 키 값
     public static final String AUTHORIZATION_HEADER = "Authorization";
-    // 토큰의 식별자 (Bearer 뒤에 한 칸 띄우고 토큰이 들어옴)
     public static final String BEARER_PREFIX = "Bearer ";
-    // 토큰 만료시간 (60분)
+
+    //60분
     private final long TOKEN_TIME = 60 * 60 * 1000L;
+    //7일
+    private final long REFRESH_TOKEN_TIME = 7 * 24 * 60 * 60 * 1000L;
 
     @Value("${jwt.secret.key}")
     private String secretKey;
@@ -38,24 +39,31 @@ public class JwtUtil {
         key = Keys.hmacShaKeyFor(bytes);
     }
 
-    //토큰 생성
+    // Access Token 생성
     public String createToken(String username) {
         Date date = new Date();
-
         return BEARER_PREFIX +
                 Jwts.builder()
-                        // 유저 식별자
                         .setSubject(username)
-                        // 만료 시간
                         .setExpiration(new Date(date.getTime() + TOKEN_TIME))
-                        // 발급일
                         .setIssuedAt(date)
-                        // 암호화 알고리즘
                         .signWith(key, signatureAlgorithm)
                         .compact();
     }
 
-    //토큰 검증
+    // Refresh Token 생성
+    public String createRefreshToken(String username) {
+        Date date = new Date();
+        return BEARER_PREFIX +
+                Jwts.builder()
+                        .setSubject(username)
+                        .setExpiration(new Date(date.getTime() + REFRESH_TOKEN_TIME)) // 💡 변수 사용
+                        .setIssuedAt(date)
+                        .signWith(key, signatureAlgorithm)
+                        .compact();
+    }
+
+    // 토큰 검증
     public boolean validateToken(String token) {
         try {
             Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token);
@@ -72,8 +80,7 @@ public class JwtUtil {
         return false;
     }
 
-
-    //토큰에서 사용자 정보 가져오기
+    // 토큰에서 사용자 정보 가져오기
     public Claims getUserInfoFromToken(String token) {
         return Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token).getBody();
     }
