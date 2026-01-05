@@ -1,6 +1,6 @@
 package com.example.daily.service;
 
-import com.example.daily.dto.TokenResponseDto; // 토큰 두 개를 담을 DTO (필요시 생성)
+import com.example.daily.dto.TokenResponseDto;
 import com.example.daily.dto.UserRequestDto;
 import com.example.daily.dto.UserResponseDto;
 import com.example.daily.entity.User;
@@ -97,6 +97,14 @@ public class UserService {
 
         //새로운 Access Token 발급
         return jwtUtil.createToken(username);
+    }
+
+    @Transactional
+    public void logout(String accessToken, String username) {
+        log.info("로그아웃 시도: Redis에서 Refresh Token 제거 중 (RT:{})", username);
+        redisTemplate.delete("RT:" + username);
+
+        log.info("✅ 로그아웃 성공: 유저 {}의 세션이 종료되었습니다.", username);
     }
 
     @Transactional(readOnly = true)
