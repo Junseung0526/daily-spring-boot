@@ -25,30 +25,21 @@ public class JwtAuthorizationFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
 
-        //헤더에서 토큰 꺼내기
         String tokenValue = request.getHeader(JwtUtil.AUTHORIZATION_HEADER);
 
-        //Bearer 접두사 제거
         if (StringUtils.hasText(tokenValue) && tokenValue.startsWith(JwtUtil.BEARER_PREFIX)) {
             String token = tokenValue.substring(7);
 
-            //토큰 검증
             if (!jwtUtil.validateToken(token)) {
                 log.error("Token Error");
                 response.setStatus(401);
                 return;
             }
 
-            //토큰에서 유저 정보 가져오기
             Claims info = jwtUtil.getUserInfoFromToken(token);
-            setAuthentication(info.getSubject());
+            jwtUtil.setAuthentication(info.getSubject());
         }
         filterChain.doFilter(request, response);
     }
 
-    //스프링 시큐리티 컨텍스트에 인증 정보 담기
-    public void setAuthentication(String username) {
-        Authentication authentication = new UsernamePasswordAuthenticationToken(username, null, null);
-        SecurityContextHolder.getContext().setAuthentication(authentication);
-    }
 }
