@@ -4,12 +4,14 @@ import com.example.daily.dto.LoginRequestDto;
 import com.example.daily.dto.TokenResponseDto;
 import com.example.daily.dto.UserRequestDto;
 import com.example.daily.dto.UserResponseDto;
+import com.example.daily.security.UserDetailsImpl;
 import com.example.daily.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -35,6 +37,16 @@ public class UserController {
         TokenResponseDto tokenResponseDto = us.login(loginRequestDto.getUsername(), loginRequestDto.getPassword());
 
         return ResponseEntity.ok(tokenResponseDto);
+    }
+
+    @Operation(summary = "로그아웃")
+    @PostMapping("/logout")
+    public ResponseEntity<String> logout(
+            @RequestHeader("Authorization") String accessToken,
+            @AuthenticationPrincipal UserDetailsImpl userDetails) {
+
+        us.logout(accessToken, userDetails.getUsername());
+        return ResponseEntity.ok("로그아웃되었습니다.");
     }
 
     @Operation(summary = "토큰 재발급")
