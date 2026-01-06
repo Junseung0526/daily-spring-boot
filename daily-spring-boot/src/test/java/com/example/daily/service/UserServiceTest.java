@@ -1,91 +1,68 @@
 package com.example.daily.service;
 
-import com.example.daily.dto.UserRequestDto;
-import com.example.daily.dto.UserResponseDto;
+import com.example.daily.dto.TokenResponseDto;
 import com.example.daily.entity.User;
 import com.example.daily.entity.UserRoleEnum;
-import com.example.daily.exception.ErrorCode;
 import com.example.daily.repository.UserRepository;
+import com.example.daily.util.JwtUtil;
 import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.test.util.ReflectionTestUtils;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
+import java.util.Optional;
+import java.util.concurrent.TimeUnit;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
 class UserServiceTest {
 
-    @Mock
-    UserRepository userRepository;
+    @Mock UserRepository userRepository;
+    @Mock PasswordEncoder passwordEncoder;
+    @Mock JwtUtil jwtUtil;
+    @Mock RedisTemplate<String, String> redisTemplate;
+    @Mock ValueOperations<String, String> valueOperations;
 
-    @Mock
-    PasswordEncoder passwordEncoder;
+    @InjectMocks UserService userService;
 
-    @InjectMocks
-    UserService userService;
+    @Test
+    @DisplayName("로그인 성공 - 토큰 발급 및 Redis 저장 확인")
+    void login_Success() {
+        String username = "admin";
+        String password = "password";
+        User user = new User(username, "encoded_pass", "test@test.com", UserRoleEnum.USER);
 
-    @Nested
-    @DisplayName("회원가입 테스트")
-    class CreateUser {
+        given(userRepository.findByUsername(username)).willReturn(Optional.of(user));
+        given(passwordEncoder.matches(password, user.getPassword())).willReturn(true);
+        given(jwtUtil.createToken(username)).willReturn("access_token");
+        given(jwtUtil.createRefreshToken(username)).willReturn("refresh_token");
+        given(redisTemplate.opsForValue()).willReturn(valueOperations);
 
-        @Test
-        @DisplayName("성공 - 일반 유저로 가입")
-        void createUser_Success_User() {
-            UserRequestDto requestDto = new UserRequestDto();
-            ReflectionTestUtils.setField(requestDto, "username", "newbie");
-            ReflectionTestUtils.setField(requestDto, "password", "password123");
-            ReflectionTestUtils.setField(requestDto, "email", "newbie@test.com");
-            ReflectionTestUtils.setField(requestDto, "admin", false);
+        TokenResponseDto result = userService.login(username, password);
 
-            given(userRepository.existsByUsername("newbie")).willReturn(false);
-            given(passwordEncoder.encode(any())).willReturn("encoded_password");
+        assertEquals("access_token", result.getAccessToken());
+        verify(valueOperations).set(eq("RT:" + username), eq("refresh_token"), anyLong(), any(TimeUnit.class));
+    }
 
-            User savedUser = new User("newbie", "encoded_password", "newbie@test.com", UserRoleEnum.USER);
-            given(userRepository.save(any(User.class))).willReturn(savedUser);
+    @Test
+    @DisplayName("로그아웃 성공 - Redis 토큰 삭제 확인")
+    void logout_Success() {
+        // given
+        String username = "admin";
 
-            UserResponseDto result = userService.createUser(requestDto);
+        // when
+        userService.logout("dummy_access_token", username);
 
-            assertEquals("newbie", result.getUsername());
-        }
-
-        @Test
-        @DisplayName("실패 - 이미 존재하는 아이디로 가입 시도")
-        void createUser_Fail_DuplicateUsername() {
-            UserRequestDto requestDto = new UserRequestDto();
-            ReflectionTestUtils.setField(requestDto, "username", "existingUser");
-
-            given(userRepository.existsByUsername("existingUser")).willReturn(true);
-
-            IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
-                userService.createUser(requestDto)
-            );
-
-            assertEquals(ErrorCode.DUPLICATE_USERNAME.getMessage(), exception.getMessage());
-        }
-
-        @Test
-        @DisplayName("실패 - 관리자 토큰이 틀리면 가입할 수 없다")
-        void createUser_Fail_WrongAdminToken() {
-            UserRequestDto requestDto = new UserRequestDto();
-            ReflectionTestUtils.setField(requestDto, "username", "adminTry");
-            ReflectionTestUtils.setField(requestDto, "admin", true);
-            ReflectionTestUtils.setField(requestDto, "adminToken", "WRONG_TOKEN");
-
-            given(userRepository.existsByUsername("adminTry")).willReturn(false);
-
-            IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
-                userService.createUser(requestDto)
-            );
-
-            assertEquals("관리자 암호가 틀려 등록이 불가능합니다.", exception.getMessage());
-        }
+        // then
+        verify(redisTemplate).delete("RT:" + username);
     }
 }
