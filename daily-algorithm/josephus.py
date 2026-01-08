@@ -9,7 +9,6 @@
 
 from collections import deque
 
-
 def josephus_problem(n, k):
     deq = deque(range(1, n + 1))
     result = []
@@ -25,7 +24,6 @@ def josephus_problem(n, k):
     return result
 
 print(josephus_problem(7, 3))
-
 
 # rotate 사용
 def solve_josephus_rotate(n, k):
@@ -44,4 +42,5 @@ def solve_josephus_rotate(n, k):
 if __name__ == "__main__":
     n, k = 7, 3
     final_order = solve_josephus_rotate(n, k)
+
     print(f"<{', '.join(map(str, final_order))}>")
