@@ -7,6 +7,7 @@
     3. 시간 복잡도 분석: O(N * K)
 """
 
+
 from collections import deque
 
 def josephus_problem(n, k):
